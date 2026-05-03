@@ -655,6 +655,37 @@ def api_admin_flights():
 @app.route('/api/admin/seed-flights')
 def api_admin_seed_flights():
     cur = mysql.connection.cursor()
+    
+    # 1. Ensure Airports exist
+    try:
+        cur.execute("SELECT COUNT(*) FROM Airports")
+        if cur.fetchone()[0] == 0:
+            for code, name, city, country in [
+                ('BLR','Kempegowda','Bengaluru','India'),
+                ('MAA','Chennai Int','Chennai','India'),
+                ('DEL','Indira Gandhi','New Delhi','India'),
+                ('BOM','Chhatrapati','Mumbai','India'),
+                ('HYD','Rajiv Gandhi','Hyderabad','India'),
+                ('CCU','Netaji Subhas','Kolkata','India'),
+                ('GOI','Dabolim','Goa','India'),
+                ('JAI','Jaipur Int','Jaipur','India'),
+                ('JFK','John F. Kennedy International','New York','USA'),
+                ('HND','Haneda','Tokyo','Japan')
+            ]:
+                cur.execute("INSERT IGNORE INTO Airports (airport_code,airport_name,city,country) VALUES (%s,%s,%s,%s)", (code,name,city,country))
+            mysql.connection.commit()
+    except Exception as e:
+        print("Airport seed error:", e)
+        mysql.connection.rollback()
+        
+    # 2. Ensure status column exists in Flights
+    try:
+        cur.execute("ALTER TABLE Flights ADD COLUMN status ENUM('Scheduled', 'Completed', 'Cancelled') DEFAULT 'Scheduled'")
+        mysql.connection.commit()
+    except:
+        mysql.connection.rollback()
+        
+    # 3. Check if flights already exist
     cur.execute("SELECT COUNT(*) FROM Flights")
     if cur.fetchone()[0] > 0:
         cur.close()
@@ -667,25 +698,28 @@ def api_admin_seed_flights():
     count = 0
     
     # Generate flights for the next 60 days
-    for i in range(60):
-        current_date = start_date + timedelta(days=i)
-        for dep in airports:
-            for arr in airports:
-                if dep != arr:
-                    # Randomize a bit to not have 100% full grid every day, 
-                    # but let's just make 1 flight per route per day to guarantee search works.
-                    airline = random.choice(airlines)
-                    hour = random.randint(6, 22)
-                    minute = random.choice([0, 15, 30, 45])
-                    dep_time = current_date.replace(hour=hour, minute=minute, second=0)
-                    price = random.randint(3000, 15000)
-                    # Base price multiplier for international
-                    if 'JFK' in [dep, arr] or 'HND' in [dep, arr]:
-                        price += 40000
-                    cur.execute("INSERT INTO Flights (airline_name, departure_airport, arrival_airport, departure_time, base_price, available_seats, status) VALUES (%s, %s, %s, %s, %s, 150, 'Scheduled')", (airline, dep, arr, dep_time, price))
-                    count += 1
-                    
-    mysql.connection.commit()
+    try:
+        for i in range(60):
+            current_date = start_date + timedelta(days=i)
+            for dep in airports:
+                for arr in airports:
+                    if dep != arr:
+                        airline = random.choice(airlines)
+                        hour = random.randint(6, 22)
+                        minute = random.choice([0, 15, 30, 45])
+                        dep_time = current_date.replace(hour=hour, minute=minute, second=0)
+                        price = random.randint(3000, 15000)
+                        if 'JFK' in [dep, arr] or 'HND' in [dep, arr]:
+                            price += 40000
+                        cur.execute("INSERT INTO Flights (airline_name, departure_airport, arrival_airport, departure_time, base_price, available_seats, status) VALUES (%s, %s, %s, %s, %s, 150, 'Scheduled')", (airline, dep, arr, dep_time, price))
+                        count += 1
+                        
+        mysql.connection.commit()
+    except Exception as e:
+        mysql.connection.rollback()
+        cur.close()
+        return jsonify({"success": False, "message": "Error seeding flights", "error": str(e)})
+        
     cur.close()
     return jsonify({"success": True, "message": f"Successfully seeded {count} flights. Your database is now populated!"})
 
