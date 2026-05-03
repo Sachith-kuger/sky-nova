@@ -652,6 +652,43 @@ def api_admin_flights():
     return jsonify([{"id":r[0],"airline":r[1],"dep":r[2],"arr":r[3],
         "time":r[4].strftime("%Y-%m-%d %H:%M") if r[4] else "N/A","price":float(r[5]),"seats":r[6],"status":r[7] if len(r)>7 and r[7] else "Scheduled"} for r in rows])
 
+@app.route('/api/admin/seed-flights')
+def api_admin_seed_flights():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT COUNT(*) FROM Flights")
+    if cur.fetchone()[0] > 0:
+        cur.close()
+        return jsonify({"success": False, "message": "Flights already exist. Clear data first if you want to re-seed."})
+
+    airports = ['BLR', 'MAA', 'DEL', 'BOM', 'HYD', 'CCU', 'GOI', 'JAI', 'JFK', 'HND']
+    airlines = ['SkyNova Airlines', 'AeroBharat', 'Global Wings', 'CloudNine Airways', 'Vishwa Jet']
+    
+    start_date = datetime.now()
+    count = 0
+    
+    # Generate flights for the next 60 days
+    for i in range(60):
+        current_date = start_date + timedelta(days=i)
+        for dep in airports:
+            for arr in airports:
+                if dep != arr:
+                    # Randomize a bit to not have 100% full grid every day, 
+                    # but let's just make 1 flight per route per day to guarantee search works.
+                    airline = random.choice(airlines)
+                    hour = random.randint(6, 22)
+                    minute = random.choice([0, 15, 30, 45])
+                    dep_time = current_date.replace(hour=hour, minute=minute, second=0)
+                    price = random.randint(3000, 15000)
+                    # Base price multiplier for international
+                    if 'JFK' in [dep, arr] or 'HND' in [dep, arr]:
+                        price += 40000
+                    cur.execute("INSERT INTO Flights (airline_name, departure_airport, arrival_airport, departure_time, base_price, available_seats, status) VALUES (%s, %s, %s, %s, %s, 150, 'Scheduled')", (airline, dep, arr, dep_time, price))
+                    count += 1
+                    
+    mysql.connection.commit()
+    cur.close()
+    return jsonify({"success": True, "message": f"Successfully seeded {count} flights. Your database is now populated!"})
+
 @app.route('/api/admin/flights/<int:flight_id>/complete', methods=['POST'])
 def complete_flight(flight_id):
     if not session.get('admin_logged_in'):
