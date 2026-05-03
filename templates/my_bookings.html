@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Trips - SkyNova</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="page-scroll">
+    <div class="page-bg"></div>
+    {% set active = 'mybookings' %}
+    {% include 'partials/navbar.html' %}
+
+    <div class="page-content">
+        <div class="page-hero" style="padding-bottom:10px">
+            <div class="page-hero-glow"></div>
+            <div class="section-tag" style="animation:slideUp 0.4s var(--ease) both">YOUR TRIPS</div>
+            <h1 class="section-title" style="font-size:2.4rem;animation:slideUp 0.4s var(--ease) both;animation-delay:0.05s">My Bookings</h1>
+            <p style="color:var(--text-tertiary);max-width:400px;margin:0 auto 20px;animation:slideUp 0.4s var(--ease) both;animation-delay:0.1s">Manage, view, or cancel your flights</p>
+            <a href="{{ url_for('search') }}" class="btn btn-accent btn-sm" style="animation:slideUp 0.4s var(--ease) both;animation-delay:0.15s"><i class="fas fa-plus me-2"></i>Book New Flight</a>
+        </div>
+
+        <div class="container" style="max-width:800px">
+            <div id="myBookingsList" style="animation:slideUp 0.4s var(--ease) both;animation-delay:0.2s"></div>
+        </div>
+        <footer class="landing-footer mt-5">&copy; 2024 SkyNova Airlines Inc.</footer>
+    </div>
+
+    <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:1055"></div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>window.addEventListener('scroll',()=>{document.getElementById('landingNav').classList.toggle('scrolled',window.scrollY>60)})</script>
+</body>
+</html>

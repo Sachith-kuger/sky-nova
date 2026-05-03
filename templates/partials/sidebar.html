@@ -1,0 +1,57 @@
+<!-- Persistent Left Sidebar -->
+<aside class="app-sidebar">
+    <a href="{{ url_for('home') }}" class="sidebar-brand">
+        <div class="sidebar-logo">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M42 20L26 14L18 4L16 6L20 14L8 12L4 7L2 8L5 16L2 18L5 26L2 27L4 28L8 23L20 21L16 29L18 31L26 21L42 15C44 14.3 44 20.7 42 20Z" fill="white"/>
+                <path d="M6 32C12 30 20 31 28 28" stroke="#d50032" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+                <path d="M10 36C16 34 22 34 30 32" stroke="#d50032" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+            </svg>
+        </div>
+        SkyNova
+    </a>
+    
+    <div class="sidebar-nav">
+        <div class="section-label px-3 mt-2">Navigate</div>
+        <a href="{{ url_for('home') }}" class="sidebar-nav-item {{ 'active' if active == 'home' else '' }}"><i class="fas fa-home"></i> Home</a>
+        <a href="{{ url_for('search') }}" class="sidebar-nav-item {{ 'active' if active == 'search' else '' }}"><i class="fas fa-search"></i> Explore Flights</a>
+        <a href="{{ url_for('booking') }}" class="sidebar-nav-item {{ 'active' if active == 'booking' else '' }}"><i class="fas fa-ticket-alt"></i> Book a Flight</a>
+        {% if user %}
+        <a href="{{ url_for('my_bookings') }}" class="sidebar-nav-item {{ 'active' if active == 'mybookings' else '' }}"><i class="fas fa-suitcase-rolling"></i> My Trips</a>
+        {% endif %}
+        
+        <div class="section-label px-3 mt-3">More</div>
+        <a href="{{ url_for('about') }}" class="sidebar-nav-item {{ 'active' if active == 'about' else '' }}"><i class="fas fa-info-circle"></i> About</a>
+        <a href="{{ url_for('contact') }}" class="sidebar-nav-item {{ 'active' if active == 'contact' else '' }}"><i class="fas fa-envelope"></i> Contact</a>
+    </div>
+
+    <div class="sidebar-footer">
+        {% if user %}
+        <div class="user-menu w-100">
+            <div class="d-flex align-items-center" style="cursor:pointer">
+                <div class="sidebar-profile">{{ user.first[0] }}</div>
+                <div class="flex-grow-1" style="min-width:0">
+                    <div class="small fw-bold text-truncate">{{ user.first }} {{ user.last }}</div>
+                    <div class="text-truncate" style="font-size:10px;color:#5a6577">{{ user.email }}</div>
+                </div>
+                <i class="fas fa-chevron-up ms-2" style="font-size:9px;color:#5a6577"></i>
+            </div>
+            <div class="user-menu-dropdown">
+                <a href="{{ url_for('my_bookings') }}"><i class="fas fa-suitcase-rolling"></i>My Trips</a>
+                <a href="{{ url_for('user_logout') }}" style="color:#ef4444"><i class="fas fa-sign-out-alt"></i>Sign Out</a>
+            </div>
+        </div>
+        {% else %}
+        <div class="w-100">
+            <div class="d-flex align-items-center mb-3">
+                <div class="sidebar-profile" style="background:rgba(255,255,255,0.06);box-shadow:none"><i class="fas fa-user" style="font-size:13px;opacity:0.4"></i></div>
+                <div>
+                    <div class="small fw-bold" style="color:#71717a">Guest</div>
+                    <div style="font-size:10px;color:#3f3f46">Sign in for full access</div>
+                </div>
+            </div>
+            <a href="{{ url_for('user_login') }}" class="btn btn-accent btn-sm w-100" style="padding:8px;font-size:12px;border-radius:8px"><i class="fas fa-sign-in-alt me-2"></i>Login / Sign Up</a>
+        </div>
+        {% endif %}
+    </div>
+</aside>

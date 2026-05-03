@@ -1,0 +1,31 @@
+<!-- Dark Fixed Navbar (used on all pages) -->
+<nav class="landing-nav" id="landingNav">
+    <a href="{{ url_for('home') }}" class="landing-nav-brand" style="gap: 12px;">
+        <div class="sidebar-logo" style="width: 40px; height: 32px;">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Sleek modern jet -->
+                <path d="M42 20L26 14L18 4L16 6L20 14L8 12L4 7L2 8L5 16L2 18L5 26L2 27L4 28L8 23L20 21L16 29L18 31L26 21L42 15C44 14.3 44 20.7 42 20Z" fill="white"/>
+                <!-- Red accent trail -->
+                <path d="M6 32C12 30 20 31 28 28" stroke="#d50032" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+                <path d="M10 36C16 34 22 34 30 32" stroke="#d50032" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+            </svg>
+        </div>
+        <span style="font-family: 'Outfit'; font-weight: 900; font-size: 24px; letter-spacing: -0.02em; color: #fff; text-transform: uppercase;">SkyNova</span>
+    </a>
+    <div class="landing-nav-links">
+        <a href="{{ url_for('home') }}" class="{{ 'nav-active' if active == 'home' else '' }}"><i class="fas fa-home me-1"></i> Home</a>
+        <a href="{{ url_for('search') }}" class="{{ 'nav-active' if active == 'search' else '' }}"><i class="fas fa-search me-1"></i> Flights</a>
+        <a href="{{ url_for('about') }}" class="{{ 'nav-active' if active == 'about' else '' }}">About</a>
+        <a href="{{ url_for('contact') }}" class="{{ 'nav-active' if active == 'contact' else '' }}">Contact</a>
+        {% if user %}
+        <a href="{{ url_for('my_bookings') }}" class="{{ 'nav-active' if active == 'mybookings' else '' }}"><i class="fas fa-suitcase-rolling me-1"></i> My Trips</a>
+        <div class="nav-user-pill">
+            <div class="nav-user-avatar">{{ user.first[0] }}</div>
+            <span>{{ user.first }}</span>
+            <a href="{{ url_for('user_logout') }}" class="nav-logout-btn" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
+        </div>
+        {% else %}
+        <a href="{{ url_for('user_login') }}" class="btn btn-accent btn-sm ms-2" style="color:#fff;font-size:12px;padding:8px 20px;border-radius:8px">Sign In</a>
+        {% endif %}
+    </div>
+</nav>

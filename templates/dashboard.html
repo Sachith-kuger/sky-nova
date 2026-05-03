@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - SkyNova</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* ===== DASHBOARD — LIGHT THEME (Glassmorphism) ===== */
+        .dash-stat {
+            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6); border-radius: 16px;
+            padding: 24px; display: flex; align-items: center; gap: 18px;
+            transition: all 0.35s ease; position: relative; overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        }
+        .dash-stat:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(0,0,0,0.08); border-color: #fff; }
+
+        .dash-stat:nth-child(1) .dash-stat-icon { background: rgba(59,130,246,0.15); color: #2563eb; }
+        .dash-stat:nth-child(2) .dash-stat-icon { background: rgba(16,185,129,0.15); color: #059669; }
+        .dash-stat:nth-child(3) .dash-stat-icon { background: rgba(245,158,11,0.15); color: #d97706; }
+        .dash-stat:nth-child(4) .dash-stat-icon { background: rgba(213,0,50,0.1); color: #d50032; }
+
+        .dash-stat-icon {
+            width: 50px; height: 50px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; flex-shrink: 0;
+        }
+        .dash-stat h3 {
+            font-family: 'JetBrains Mono'; font-size: 26px; font-weight: 800;
+            color: #0f172a; margin: 0; letter-spacing: -0.03em;
+        }
+        .dash-stat p { font-size: 13px; color: #64748b; margin: 2px 0 0; font-weight: 600; }
+
+        .dash-card {
+            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6); border-radius: 18px;
+            padding: 0; overflow: hidden; height: 100%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+        }
+        .dash-card-header {
+            padding: 18px 22px; border-bottom: 1px solid rgba(0,0,0,0.06);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .dash-card-header h6 {
+            font-family: 'Outfit'; font-weight: 800; font-size: 16px;
+            color: #1e293b; margin: 0; display: flex; align-items: center; gap: 10px;
+        }
+        .dash-card-header .card-icon {
+            width: 32px; height: 32px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center; font-size: 14px;
+        }
+        .dash-card-body { padding: 18px 22px; }
+
+        .chart-container { position: relative; height: 260px; }
+
+        .dash-scroll { max-height: 280px; overflow-y: auto; }
+        .dash-scroll::-webkit-scrollbar { width: 5px; }
+        .dash-scroll::-webkit-scrollbar-track { background: transparent; }
+        .dash-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 5px; }
+
+        .dash-table { width: 100%; }
+        .dash-table th { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; padding: 0 0 12px; border-bottom: 2px solid rgba(0,0,0,0.05); }
+        .dash-table td { font-size: 14px; font-weight: 500; color: #334155; padding: 12px 0; border-bottom: 1px solid rgba(0,0,0,0.04); }
+        .dash-table tr:last-child td { border: none; }
+
+        .dash-topbar {
+            padding: 20px 32px; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(10px);
+        }
+        .dash-topbar h4 { font-family: 'Outfit'; font-weight: 900; color: #0f172a; margin: 0; font-size: 24px; letter-spacing: -0.02em; }
+        .dash-topbar p { color: #475569 !important; font-weight: 500; }
+
+        .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; display: inline-block; margin-right: 6px; animation: pulseGreen 2s ease-in-out infinite; }
+        @keyframes pulseGreen { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+
+    </style>
+</head>
+<body>
+    <div class="page-bg"></div>
+
+    <div class="app-wrapper" id="dashboard-page">
+        <!-- Sidebar -->
+        <aside class="app-sidebar">
+            <a href="{{ url_for('home') }}" class="sidebar-brand" style="gap: 10px;">
+                <div class="sidebar-logo" style="width: 32px; height: 24px;">
+                    <svg viewBox="0 0 48 48" fill="none"><path d="M42 20L26 14L18 4L16 6L20 14L8 12L4 7L2 8L5 16L2 18L5 26L2 27L4 28L8 23L20 21L16 29L18 31L26 21L42 15C44 14.3 44 20.7 42 20Z" fill="white"/><path d="M6 32C12 30 20 31 28 28" stroke="#d50032" stroke-width="2" stroke-linecap="round" opacity="0.8"/></svg>
+                </div>
+                <span style="font-weight: 900; text-transform: uppercase; font-size: 18px; letter-spacing: -0.02em;">SkyNova</span>
+                <span style="font-size: 9px; font-weight: 600; opacity: 0.5; background: rgba(255,255,255,0.1); padding: 1px 6px; border-radius: 10px; text-transform: uppercase;">Admin</span>
+            </a>
+
+            <div class="sidebar-nav">
+                <div class="text-muted small fw-bold text-uppercase mb-2 px-3 mt-3" style="letter-spacing: 1px; font-size: 10px;">Admin Panel</div>
+                <a href="{{ url_for('dashboard') }}" class="sidebar-nav-item active"><i class="fas fa-chart-line"></i> Analytics</a>
+                <a href="{{ url_for('admin_flights') }}" class="sidebar-nav-item"><i class="fas fa-plane"></i> Flights</a>
+                <a href="{{ url_for('admin_passengers') }}" class="sidebar-nav-item"><i class="fas fa-users"></i> Passengers</a>
+                <a href="{{ url_for('admin_bookings') }}" class="sidebar-nav-item"><i class="fas fa-ticket-alt"></i> Bookings</a>
+
+                <div class="text-muted small fw-bold text-uppercase mb-2 px-3 mt-4" style="letter-spacing: 1px; font-size: 10px;">System</div>
+                <a href="#" class="sidebar-nav-item"><i class="fas fa-cog"></i> Settings</a>
+                <a href="{{ url_for('home') }}" class="sidebar-nav-item"><i class="fas fa-sign-out-alt"></i> Exit Admin</a>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="d-flex align-items-center gap-3 w-100">
+                    <div style="width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#ff3355);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#fff;flex-shrink:0">A</div>
+                    <div style="min-width:0">
+                        <div class="small fw-bold text-truncate">Administrator</div>
+                        <div style="font-size:10px;color:var(--text-tertiary)"><span class="live-dot"></span>System Online</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="app-main">
+            <!-- Topbar -->
+            <div class="dash-topbar">
+                <div>
+                    <h4>Analytics Overview</h4>
+                    <p style="font-size:12px;color:var(--text-tertiary);margin:2px 0 0">Real-time system metrics & insights</p>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.15);border-radius:10px;padding:6px 14px;display:flex;align-items:center;gap:6px">
+                        <span class="live-dot"></span>
+                        <span style="font-size:11px;font-weight:600;color:#10b981">Live</span>
+                    </div>
+                    <button class="btn btn-sm" onclick="location.reload()" style="background:rgba(0,0,0,0.05);border:1px solid rgba(0,0,0,0.1);color:#1e293b;border-radius:10px;padding:6px 16px;font-size:12px;font-weight:600;box-shadow:0 2px 5px rgba(0,0,0,0.02)">
+                        <i class="fas fa-sync-alt me-2" style="font-size:11px"></i>Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div class="px-4 py-4" style="padding-left:32px!important;padding-right:32px!important">
+                <!-- KPI Stats -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3"><div class="dash-stat">
+                        <div class="dash-stat-icon"><i class="fas fa-plane"></i></div>
+                        <div><h3>1,248</h3><p>Active Flights</p></div>
+                    </div></div>
+                    <div class="col-md-3"><div class="dash-stat">
+                        <div class="dash-stat-icon"><i class="fas fa-users"></i></div>
+                        <div><h3>8,592</h3><p>Passengers</p></div>
+                    </div></div>
+                    <div class="col-md-3"><div class="dash-stat">
+                        <div class="dash-stat-icon"><i class="fas fa-wallet"></i></div>
+                        <div><h3>₹12.4L</h3><p>Revenue (MTD)</p></div>
+                    </div></div>
+                    <div class="col-md-3"><div class="dash-stat">
+                        <div class="dash-stat-icon"><i class="fas fa-chart-line"></i></div>
+                        <div><h3>+14%</h3><p>Growth Rate</p></div>
+                    </div></div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="row g-3 mb-4">
+                    <div class="col-lg-8">
+                        <div class="dash-card">
+                            <div class="dash-card-header">
+                                <h6><div class="card-icon" style="background:rgba(59,130,246,0.1);color:#3b82f6"><i class="fas fa-route"></i></div> Busiest Routes</h6>
+                                <span style="font-size:10px;color:var(--text-tertiary);font-weight:600">AUTO-REFRESH 5s</span>
+                            </div>
+                            <div class="dash-card-body">
+                                <div id="busiestRoutesChartContainer" class="chart-container">
+                                    <canvas id="busiestRoutesChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="dash-card">
+                            <div class="dash-card-header">
+                                <h6><div class="card-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b"><i class="fas fa-chart-pie"></i></div> Market Share</h6>
+                            </div>
+                            <div class="dash-card-body">
+                                <div id="dominantAirlinesChartContainer" class="chart-container">
+                                    <canvas id="dominantAirlinesChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Panels -->
+                <div class="row g-3 pb-4">
+                    <!-- High Value Customers -->
+                    <div class="col-lg-4">
+                        <div class="dash-card">
+                            <div class="dash-card-header">
+                                <h6><div class="card-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b"><i class="fas fa-star"></i></div> Top Spenders</h6>
+                            </div>
+                            <div class="dash-card-body dash-scroll">
+                                <table class="dash-table">
+                                    <thead><tr><th>Passenger</th><th style="text-align:right">Spent</th></tr></thead>
+                                    <tbody id="highValueCustomersTableBody">
+                                        <tr><td colspan="2" class="text-center py-4"><div class="spinner-border spinner-border-sm" style="color:var(--accent)"></div></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Flight Capacity -->
+                    <div class="col-lg-4">
+                        <div class="dash-card">
+                            <div class="dash-card-header">
+                                <h6><div class="card-icon" style="background:rgba(139,92,246,0.1);color:#8b5cf6"><i class="fas fa-chair"></i></div> Flight Capacity</h6>
+                            </div>
+                            <div class="dash-card-body dash-scroll" id="occupancyContainer">
+                                <div class="text-center py-4"><div class="spinner-border spinner-border-sm" style="color:var(--accent)"></div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Activity -->
+                    <div class="col-lg-4">
+                        <div class="dash-card">
+                            <div class="dash-card-header">
+                                <h6><div class="card-icon" style="background:rgba(16,185,129,0.1);color:#10b981"><i class="fas fa-broadcast-tower"></i></div> Live Feed</h6>
+                                <span class="live-dot"></span>
+                            </div>
+                            <div class="dash-card-body dash-scroll" id="recentTrafficContainer">
+                                <div class="text-center py-4"><div class="spinner-border spinner-border-sm" style="color:var(--accent)"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

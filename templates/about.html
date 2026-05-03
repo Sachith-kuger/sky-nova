@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - SkyNova</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="page-scroll">
+    <div class="page-bg"></div>
+    {% set active = 'about' %}
+    {% include 'partials/navbar.html' %}
+
+    <div class="page-content">
+        <div class="page-hero">
+            <div class="page-hero-glow"></div>
+            <div class="section-tag" style="animation:slideUp 0.4s var(--ease) both">OUR STORY</div>
+            <h1 class="section-title" style="font-size:2.6rem;animation:slideUp 0.4s var(--ease) both;animation-delay:0.05s">Redefining air travel</h1>
+            <p style="color:var(--text-tertiary);max-width:500px;margin:0 auto;animation:slideUp 0.4s var(--ease) both;animation-delay:0.1s">SkyNova was built with a simple mission — make booking flights as easy as sending a text.</p>
+        </div>
+
+        <div class="container" style="max-width:1000px">
+            <!-- Values -->
+            <div class="row g-4 mb-5">
+                {% set values = [
+                    ('fa-shield-alt', '#3b82f6', 'rgba(59,130,246,0.1)', 'Safety First', 'Uncompromising safety protocols ensure every flight meets the highest standards in the industry.'),
+                    ('fa-gem', '#8b5cf6', 'rgba(139,92,246,0.1)', 'Premium Experience', 'World-class cabin comfort and personalized service on every journey you take.'),
+                    ('fa-leaf', '#10b981', 'rgba(16,185,129,0.1)', 'Sustainability', 'We are committed to carbon-neutral operations and sustainable aviation by 2030.'),
+                    ('fa-heart', '#f43f5e', 'rgba(244,63,94,0.1)', 'Customer Love', 'Every decision starts and ends with our travelers. Your satisfaction is our mission.')
+                ] %}
+                {% for icon, color, bg, title, desc in values %}
+                <div class="col-md-6" style="animation:slideUp 0.4s var(--ease) both;animation-delay:{{ 0.15 + loop.index * 0.06 }}s">
+                    <div class="glass-card h-100">
+                        <div class="feature-icon-dark mb-3" style="background:{{ bg }};color:{{ color }}"><i class="fas {{ icon }}"></i></div>
+                        <h5 class="fw-bold" style="font-size:16px">{{ title }}</h5>
+                        <p style="font-size:13px;color:var(--text-tertiary);line-height:1.7;margin:0">{{ desc }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Numbers -->
+            <div class="glass-card text-center p-5 mb-5" style="background:rgba(30, 41, 59, 0.5); border-color:rgba(255,255,255,0.1); animation:slideUp 0.4s var(--ease) both; animation-delay:0.5s">
+                <div class="section-tag mb-4" style="color:var(--accent); letter-spacing: 2px;">BY THE NUMBERS</div>
+                <div class="row g-4">
+                    {% set nums = [('5M+', 'Passengers Served'), ('150+', 'Destinations'), ('99.8%', 'On-Time Rate'), ('24/7', 'Support')] %}
+                    {% for val, label in nums %}
+                    <div class="col-md-3">
+                        <div class="mono fw-bold" style="font-size:38px; color:#fff; letter-spacing:-1px; margin-bottom:5px">{{ val }}</div>
+                        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text-secondary); opacity:0.7">{{ label }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <footer class="landing-footer">&copy; 2024 SkyNova Airlines Inc.</footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>window.addEventListener('scroll',()=>{document.getElementById('landingNav').classList.toggle('scrolled',window.scrollY>60)})</script>
+</body>
+</html>

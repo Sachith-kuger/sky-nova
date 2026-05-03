@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Management - SkyNova Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="page-bg"></div>
+
+    <div class="app-wrapper" id="dashboard-page">
+        <aside class="app-sidebar">
+            <a href="{{ url_for('home') }}" class="sidebar-brand" style="gap: 10px;">
+                <div class="sidebar-logo" style="width: 32px; height: 24px;">
+                    <svg viewBox="0 0 48 48" fill="none"><path d="M42 20L26 14L18 4L16 6L20 14L8 12L4 7L2 8L5 16L2 18L5 26L2 27L4 28L8 23L20 21L16 29L18 31L26 21L42 15C44 14.3 44 20.7 42 20Z" fill="white"/><path d="M6 32C12 30 20 31 28 28" stroke="#d50032" stroke-width="2" stroke-linecap="round" opacity="0.8"/></svg>
+                </div>
+                <span style="font-weight: 900; text-transform: uppercase; font-size: 18px; letter-spacing: -0.02em;">SkyNova</span>
+                <span style="font-size: 9px; font-weight: 600; opacity: 0.5; background: rgba(255,255,255,0.1); padding: 1px 6px; border-radius: 10px; text-transform: uppercase;">Admin</span>
+            </a>
+            <div class="sidebar-nav">
+                <div class="text-muted small fw-bold text-uppercase mb-2 px-3 mt-3" style="letter-spacing: 1px;">Admin Panel</div>
+                <a href="{{ url_for('dashboard') }}" class="sidebar-nav-item"><i class="fas fa-chart-line"></i> Analytics Overview</a>
+                <a href="{{ url_for('admin_flights') }}" class="sidebar-nav-item active"><i class="fas fa-plane"></i> Flight Management</a>
+                <a href="{{ url_for('admin_passengers') }}" class="sidebar-nav-item"><i class="fas fa-users"></i> Passengers</a>
+                <a href="{{ url_for('admin_bookings') }}" class="sidebar-nav-item"><i class="fas fa-ticket-alt"></i> Bookings</a>
+                <div class="text-muted small fw-bold text-uppercase mb-2 px-3 mt-4" style="letter-spacing: 1px;">System</div>
+                <a href="#" class="sidebar-nav-item"><i class="fas fa-cog"></i> Settings</a>
+                <a href="{{ url_for('home') }}" class="sidebar-nav-item"><i class="fas fa-sign-out-alt"></i> Exit Admin</a>
+            </div>
+            <div class="sidebar-footer">
+                <img src="https://ui-avatars.com/api/?name=Admin&background=D50032&color=fff" class="rounded-circle me-3" width="40" height="40" alt="Admin">
+                <div>
+                    <div class="small fw-bold">Admin</div>
+                    <div class="small text-muted" style="font-size: 11px;"><i class="fas fa-circle text-success me-1"></i>Online</div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="app-main">
+            <div class="app-topbar">
+                <h4 class="mb-0 fw-bold" style="color: #0f172a; letter-spacing: -0.01em;">Flight Fleet</h4>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="position-relative">
+                        <i class="fas fa-search position-absolute text-muted" style="left: 12px; top: 50%; transform: translateY(-50%); font-size: 13px;"></i>
+                        <input type="text" id="searchInput" class="form-control form-control-sm ps-4" placeholder="Search flights..." style="border-radius: 20px; border: 1px solid rgba(0,0,0,0.1); background: rgba(255,255,255,0.8); width: 220px; box-shadow: none;">
+                    </div>
+                    <span class="badge bg-primary-soft text-primary px-3 py-2" style="background: rgba(213, 0, 50, 0.1);"><i class="fas fa-plane me-2"></i><span id="flightCount">0</span> Active Flights</span>
+                </div>
+            </div>
+
+            <div class="px-4 py-4">
+                <div class="glass-card">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">ID</th>
+                                    <th style="font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">Airline</th>
+                                    <th style="font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">Route</th>
+                                    <th style="font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">Departure</th>
+                                    <th style="font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">Price</th>
+                                    <th style="font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">Seats Left</th>
+                                    <th style="font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">Status</th>
+                                    <th style="font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 1px;" class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="flightsTableBody">
+                                <tr><td colspan="6" class="text-center py-5"><div class="spinner-border spinner-border-sm text-primary"></div> Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetch('/api/admin/flights');
+                const data = await res.json();
+                document.getElementById('flightCount').textContent = data.length;
+                const tbody = document.getElementById('flightsTableBody');
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted">No flights found</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = data.map(f => {
+                    const statusBadgeClass = f.status === 'Completed' ? 'bg-success' : f.status === 'Cancelled' ? 'bg-danger' : 'bg-primary';
+                    let actionBtn = '';
+                    if (f.status === 'Scheduled') {
+                        actionBtn = `<button class="btn btn-sm btn-outline-primary border-0 me-1" onclick="rescheduleFlight(${f.id}, '${f.time}')" title="Reschedule Flight"><i class="fas fa-clock"></i></button>
+                                     <button class="btn btn-sm btn-outline-success border-0" onclick="completeFlight(${f.id})" title="Mark Completed"><i class="fas fa-check-circle"></i></button>`;
+                    } else if (f.status === 'Completed') {
+                        actionBtn = `<button class="btn btn-sm btn-outline-primary border-0" onclick="rescheduleFlight(${f.id}, '${f.time}')" title="Reschedule Flight"><i class="fas fa-clock"></i></button>`;
+                    }
+                    return `
+                        <td class="fw-bold">#${f.id}</td>
+                        <td>${f.airline}</td>
+                        <td>${f.dep} <i class="fas fa-arrow-right mx-2 text-muted small"></i> ${f.arr}</td>
+                        <td>${f.time}</td>
+                        <td class="fw-bold">₹${f.price.toFixed(2)}</td>
+                        <td><span class="badge ${f.seats > 10 ? 'bg-success' : f.seats > 0 ? 'bg-warning text-dark' : 'bg-danger'}">${f.seats ?? 'N/A'}</span></td>
+                        <td><span class="badge ${statusBadgeClass}">${f.status}</span></td>
+                        <td class="text-end">${actionBtn}</td>
+                    </tr>
+                    `;
+                }).join('');
+            } catch (e) {
+                console.error(e);
+                document.getElementById('flightsTableBody').innerHTML = '<tr><td colspan="8" class="text-center text-danger py-5">Failed to load flights</td></tr>';
+            }
+        });
+
+        document.getElementById('searchInput').addEventListener('keyup', function(e) {
+            const term = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#flightsTableBody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(term) ? '' : 'none';
+            });
+        });
+
+        async function completeFlight(id) {
+            if(!confirm('Mark this flight as Completed? All confirmed bookings will also be marked as completed.')) return;
+            try {
+                const res = await fetch(`/api/admin/flights/${id}/complete`, { method: 'POST' });
+                const data = await res.json();
+                if(data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Error completing flight');
+                }
+            } catch(e) {
+                console.error(e);
+                alert('Error processing request');
+            }
+        }
+
+        async function rescheduleFlight(id, currentTime) {
+            const newTime = prompt("Enter new departure time (YYYY-MM-DD HH:MM):", currentTime);
+            if (!newTime) return; // cancelled or empty
+            
+            try {
+                const res = await fetch(`/api/admin/flights/${id}/reschedule`, { 
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({new_time: newTime})
+                });
+                const data = await res.json();
+                if(data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Error rescheduling flight');
+                }
+            } catch(e) {
+                console.error(e);
+                alert('Error processing request');
+            }
+        }
+    </script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

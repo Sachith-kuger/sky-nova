@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Flight - SkyNova</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="page-scroll">
+    <div class="page-bg"></div>
+    {% set active = '' %}
+    {% include 'partials/navbar.html' %}
+
+    <div class="page-content">
+        <div class="page-hero" style="padding-bottom:20px">
+            <div class="page-hero-glow"></div>
+            <div class="d-inline-flex align-items-center gap-2 mb-3" style="font-size:11px;color:#10b981;font-weight:600;animation:slideUp 0.4s var(--ease) both">
+                <i class="fas fa-lock" style="font-size:10px"></i> 256-bit SSL Encrypted · Secure Checkout
+            </div>
+            <h1 class="section-title" style="font-size:2.4rem;animation:slideUp 0.4s var(--ease) both;animation-delay:0.05s">Complete your booking</h1>
+            <p style="color:var(--text-tertiary);max-width:400px;margin:0 auto;animation:slideUp 0.4s var(--ease) both;animation-delay:0.1s">You're one step away from your next adventure.</p>
+        </div>
+
+        <div class="container" style="max-width:900px">
+            <div id="flightSummary" style="display:none"></div>
+            <div class="row">
+                <div class="col-lg-8">
+                    <form id="bookingForm" onsubmit="bookTicket(event)">
+                        <input type="hidden" id="hiddenFlightId">
+                        <div id="travelerForms">
+                            <div class="glass-card mb-3" id="flightSelectSection" style="animation:slideUp 0.4s var(--ease) both;animation-delay:0.15s">
+                                <h6 class="fw-bold mb-3 pb-2" style="border-bottom:1px solid var(--card-border);font-size:14px">
+                                    <i class="fas fa-user me-2" style="color:var(--accent)"></i>Passenger Details
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-3"><label class="form-label-dark">FIRST NAME</label><input type="text" class="form-control form-control-dark" id="firstName" required value="{{ user.first if user else '' }}" placeholder="John"></div>
+                                    <div class="col-md-3"><label class="form-label-dark">LAST NAME</label><input type="text" class="form-control form-control-dark" id="lastName" required value="{{ user.last if user else '' }}" placeholder="Doe"></div>
+                                    <div class="col-md-3"><label class="form-label-dark">EMAIL</label><input type="email" class="form-control form-control-dark" id="email" required value="{{ user.email if user else '' }}" placeholder="you@example.com"></div>
+                                    <div class="col-md-3">
+                                        <label class="form-label-dark">CLASS</label>
+                                        <select class="form-select form-select-dark" id="travelClass">
+                                            <option value="economy">Economy</option>
+                                            <option value="business">Business</option>
+                                            <option value="first">First Class</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <h6 class="fw-bold mb-3 mt-4 pt-3" style="border-top:1px solid var(--card-border);font-size:14px">
+                                    <i class="fas fa-plane me-2" style="color:var(--accent)"></i>Flight Selection
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-12"><label class="form-label-dark">SELECT FLIGHT</label><select class="form-select-dark w-100" id="flightSelect" required><option value="">Loading flights...</option></select></div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-accent w-100 py-3 mt-2" style="font-size:14px;border-radius:10px;animation:slideUp 0.4s var(--ease) both;animation-delay:0.2s">
+                            Confirm Booking <i class="fas fa-check ms-2"></i>
+                        </button>
+                    </form>
+                </div>
+                <div class="col-lg-4">
+                    <div id="priceSummary" style="display:none"></div>
+                </div>
+            </div>
+        </div>
+        <footer class="landing-footer mt-5">&copy; 2024 SkyNova Airlines Inc.</footer>
+    </div>
+
+    <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:1055"></div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>window.addEventListener('scroll',()=>{document.getElementById('landingNav').classList.toggle('scrolled',window.scrollY>60)})</script>
+</body>
+</html>

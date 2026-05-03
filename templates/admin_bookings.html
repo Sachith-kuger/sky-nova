@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookings - SkyNova Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="page-bg"></div>
+
+    <div class="app-wrapper" id="dashboard-page">
+        <aside class="app-sidebar">
+            <a href="{{ url_for('home') }}" class="sidebar-brand" style="gap: 10px;">
+                <div class="sidebar-logo" style="width: 32px; height: 24px;">
+                    <svg viewBox="0 0 48 48" fill="none"><path d="M42 20L26 14L18 4L16 6L20 14L8 12L4 7L2 8L5 16L2 18L5 26L2 27L4 28L8 23L20 21L16 29L18 31L26 21L42 15C44 14.3 44 20.7 42 20Z" fill="white"/><path d="M6 32C12 30 20 31 28 28" stroke="#d50032" stroke-width="2" stroke-linecap="round" opacity="0.8"/></svg>
+                </div>
+                <span style="font-weight: 900; text-transform: uppercase; font-size: 18px; letter-spacing: -0.02em;">SkyNova</span>
+                <span style="font-size: 9px; font-weight: 600; opacity: 0.5; background: rgba(255,255,255,0.1); padding: 1px 6px; border-radius: 10px; text-transform: uppercase;">Admin</span>
+            </a>
+            <div class="sidebar-nav">
+                <div class="text-muted small fw-bold text-uppercase mb-2 px-3 mt-3" style="letter-spacing: 1px;">Admin Panel</div>
+                <a href="{{ url_for('dashboard') }}" class="sidebar-nav-item"><i class="fas fa-chart-line"></i> Analytics Overview</a>
+                <a href="{{ url_for('admin_flights') }}" class="sidebar-nav-item"><i class="fas fa-plane"></i> Flight Management</a>
+                <a href="{{ url_for('admin_passengers') }}" class="sidebar-nav-item"><i class="fas fa-users"></i> Passengers</a>
+                <a href="{{ url_for('admin_bookings') }}" class="sidebar-nav-item active"><i class="fas fa-ticket-alt"></i> Bookings</a>
+                <div class="text-muted small fw-bold text-uppercase mb-2 px-3 mt-4" style="letter-spacing: 1px;">System</div>
+                <a href="#" class="sidebar-nav-item"><i class="fas fa-cog"></i> Settings</a>
+                <a href="{{ url_for('home') }}" class="sidebar-nav-item"><i class="fas fa-sign-out-alt"></i> Exit Admin</a>
+            </div>
+            <div class="sidebar-footer">
+                <img src="https://ui-avatars.com/api/?name=Admin&background=D50032&color=fff" class="rounded-circle me-3" width="40" height="40" alt="Admin">
+                <div>
+                    <div class="small fw-bold">Admin</div>
+                    <div class="small text-muted" style="font-size: 11px;"><i class="fas fa-circle text-success me-1"></i>Online</div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="app-main">
+            <div class="app-topbar">
+                <h4 class="mb-0 fw-bold" style="color: #0f172a; letter-spacing: -0.01em;">Booking Records</h4>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="position-relative">
+                        <i class="fas fa-search position-absolute text-muted" style="left: 12px; top: 50%; transform: translateY(-50%); font-size: 13px;"></i>
+                        <input type="text" id="searchInput" class="form-control form-control-sm ps-4" placeholder="Search bookings..." style="border-radius: 20px; border: 1px solid rgba(0,0,0,0.1); background: rgba(255,255,255,0.8); width: 220px; box-shadow: none;">
+                    </div>
+                    <span class="badge bg-primary-soft text-primary px-3 py-2" style="background: rgba(213, 0, 50, 0.1);"><i class="fas fa-ticket-alt me-2"></i><span id="bookingCount">0</span> Total Tickets</span>
+                </div>
+            </div>
+
+            <div class="px-4 py-4">
+                <div class="glass-card">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">ID</th>
+                                    <th style="font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">Passenger</th>
+                                    <th style="font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">Airline</th>
+                                    <th style="font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">Route</th>
+                                    <th style="font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">Seat</th>
+                                    <th style="font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">Class</th>
+                                    <th style="font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">Paid</th>
+                                    <th style="font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">Date</th>
+                                    <th style="font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bookingsTableBody">
+                                <tr><td colspan="9" class="text-center py-5"><div class="spinner-border spinner-border-sm text-primary"></div> Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetch('/api/admin/bookings');
+                const data = await res.json();
+                document.getElementById('bookingCount').textContent = data.length;
+                const tbody = document.getElementById('bookingsTableBody');
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9" class="text-center py-5 text-muted">No bookings found</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = data.map(b => {
+                    const st = (b.status || '').toLowerCase();
+                    const statusClass = st === 'confirmed' ? 'bg-success' : st === 'cancelled' ? 'bg-danger' : 'bg-secondary';
+                    return `
+                    <tr>
+                        <td class="fw-bold">#${b.id}</td>
+                        <td>${b.passenger}</td>
+                        <td>${b.airline}</td>
+                        <td>${b.dep} <i class="fas fa-arrow-right mx-2 text-muted small"></i> ${b.arr}</td>
+                        <td><span class="badge bg-dark">${b.seat || 'N/A'}</span></td>
+                        <td><span class="badge border border-secondary text-secondary" style="background: transparent;">${b.class || 'Economy'}</span></td>
+                        <td class="fw-bold text-success">$${b.paid.toFixed(2)}</td>
+                        <td class="text-muted small">${b.date}</td>
+                        <td><span class="badge ${statusClass}">${b.status || 'pending'}</span></td>
+                    </tr>
+                `}).join('');
+            } catch (e) {
+                console.error(e);
+                document.getElementById('bookingsTableBody').innerHTML = '<tr><td colspan="9" class="text-center text-danger py-5">Failed to load bookings</td></tr>';
+            }
+        });
+
+        document.getElementById('searchInput').addEventListener('keyup', function(e) {
+            const term = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#bookingsTableBody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(term) ? '' : 'none';
+            });
+        });
+    </script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
