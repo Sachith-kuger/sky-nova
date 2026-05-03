@@ -654,7 +654,8 @@ def api_admin_flights():
 
 @app.route('/api/admin/seed-flights')
 def api_admin_seed_flights():
-    cur = mysql.connection.cursor()
+    try:
+        cur = mysql.connection.cursor()
     
     # 1. Ensure Airports exist
     try:
@@ -720,8 +721,11 @@ def api_admin_seed_flights():
         cur.close()
         return jsonify({"success": False, "message": "Error seeding flights", "error": str(e)})
         
-    cur.close()
-    return jsonify({"success": True, "message": f"Successfully seeded {count} flights. Your database is now populated!"})
+        cur.close()
+        return jsonify({"success": True, "message": f"Successfully seeded {count} flights. Your database is now populated!"})
+    except Exception as e:
+        import traceback
+        return jsonify({"success": False, "message": "Unhandled exception", "error": traceback.format_exc()}), 500
 
 @app.route('/api/admin/flights/<int:flight_id>/complete', methods=['POST'])
 def complete_flight(flight_id):
