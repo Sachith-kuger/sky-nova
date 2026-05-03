@@ -19,6 +19,76 @@ app.config['MYSQL_PORT'] = int(os.getenv('MYSQL_PORT'))
 
 mysql = MySQL(app)
 
+# ================= AUTO-SEED ON STARTUP =================
+_seeded = False
+
+@app.before_request
+def auto_seed_database():
+    global _seeded
+    if _seeded:
+        return
+    _seeded = True
+    try:
+        cur = mysql.connection.cursor()
+        
+        # 1. Seed Airports if empty
+        cur.execute("SELECT COUNT(*) FROM Airports")
+        if cur.fetchone()[0] == 0:
+            for code, name, city, country in [
+                ('BLR','Kempegowda','Bengaluru','India'),
+                ('MAA','Chennai Int','Chennai','India'),
+                ('DEL','Indira Gandhi','New Delhi','India'),
+                ('BOM','Chhatrapati','Mumbai','India'),
+                ('HYD','Rajiv Gandhi','Hyderabad','India'),
+                ('CCU','Netaji Subhas','Kolkata','India'),
+                ('GOI','Dabolim','Goa','India'),
+                ('JAI','Jaipur Int','Jaipur','India'),
+                ('JFK','John F. Kennedy International','New York','USA'),
+                ('HND','Haneda','Tokyo','Japan')
+            ]:
+                cur.execute("INSERT IGNORE INTO Airports (airport_code,airport_name,city,country) VALUES (%s,%s,%s,%s)", (code,name,city,country))
+            mysql.connection.commit()
+            print("AUTO-SEED: Airports seeded successfully.")
+        
+        # 2. Ensure status column exists in Flights
+        try:
+            cur.execute("ALTER TABLE Flights ADD COLUMN status ENUM('Scheduled', 'Completed', 'Cancelled') DEFAULT 'Scheduled'")
+            mysql.connection.commit()
+        except:
+            mysql.connection.rollback()
+        
+        # 3. Seed Flights if empty
+        cur.execute("SELECT COUNT(*) FROM Flights")
+        if cur.fetchone()[0] == 0:
+            airports = ['BLR', 'MAA', 'DEL', 'BOM', 'HYD', 'CCU', 'GOI', 'JAI', 'JFK', 'HND']
+            airlines = ['SkyNova Airlines', 'AeroBharat', 'Global Wings', 'CloudNine Airways', 'Vishwa Jet']
+            start_date = datetime.now()
+            count = 0
+            
+            for i in range(60):
+                current_date = start_date + timedelta(days=i)
+                for dep in airports:
+                    for arr in airports:
+                        if dep != arr:
+                            airline = random.choice(airlines)
+                            hour = random.randint(6, 22)
+                            minute = random.choice([0, 15, 30, 45])
+                            dep_time = current_date.replace(hour=hour, minute=minute, second=0)
+                            price = random.randint(3000, 15000)
+                            if 'JFK' in [dep, arr] or 'HND' in [dep, arr]:
+                                price += 40000
+                            cur.execute("INSERT INTO Flights (airline_name, departure_airport, arrival_airport, departure_time, base_price, available_seats, status) VALUES (%s, %s, %s, %s, %s, 150, 'Scheduled')", (airline, dep, arr, dep_time, price))
+                            count += 1
+            
+            mysql.connection.commit()
+            print(f"AUTO-SEED: {count} flights seeded successfully for the next 60 days.")
+        else:
+            print("AUTO-SEED: Flights table already has data, skipping seed.")
+        
+        cur.close()
+    except Exception as e:
+        print(f"AUTO-SEED ERROR: {e}")
+
 # ================= HELPER =================
 def get_current_user():
     if session.get('user_logged_in'):
@@ -654,8 +724,7 @@ def api_admin_flights():
 
 @app.route('/api/admin/seed-flights')
 def api_admin_seed_flights():
-    try:
-        cur = mysql.connection.cursor()
+    cur = mysql.connection.cursor()
     
     # 1. Ensure Airports exist
     try:
@@ -721,11 +790,8 @@ def api_admin_seed_flights():
         cur.close()
         return jsonify({"success": False, "message": "Error seeding flights", "error": str(e)})
         
-        cur.close()
-        return jsonify({"success": True, "message": f"Successfully seeded {count} flights. Your database is now populated!"})
-    except Exception as e:
-        import traceback
-        return jsonify({"success": False, "message": "Unhandled exception", "error": traceback.format_exc()}), 500
+    cur.close()
+    return jsonify({"success": True, "message": f"Successfully seeded {count} flights. Your database is now populated!"})
 
 @app.route('/api/admin/flights/<int:flight_id>/complete', methods=['POST'])
 def complete_flight(flight_id):
