@@ -1,5 +1,3 @@
-import pymysql
-pymysql.install_as_MySQLdb()
 from flask import Flask, jsonify, render_template, request, session, redirect, url_for, flash
 from flask_mysqldb import MySQL
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -10,84 +8,13 @@ app = Flask(__name__)
 app.secret_key = 'aero_secret_key_123'
 
 import os
-
-app.config['MYSQL_HOST'] = os.getenv('MYSQL_HOST')
-app.config['MYSQL_USER'] = os.getenv('MYSQL_USER')
-app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD')
-app.config['MYSQL_DB'] = os.getenv('MYSQL_DB')
-app.config['MYSQL_PORT'] = int(os.getenv('MYSQL_PORT'))
+app.config['MYSQL_HOST'] = os.environ.get('MYSQL_HOST', '127.0.0.1')
+app.config['MYSQL_USER'] = os.environ.get('MYSQL_USER', 'root')
+app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD', 'root123')
+app.config['MYSQL_DB'] = os.environ.get('MYSQL_DB', 'airline_system')
+app.config['MYSQL_PORT'] = int(os.environ.get('MYSQL_PORT', 3307))
 
 mysql = MySQL(app)
-
-# ================= AUTO-SEED ON STARTUP =================
-_seeded = False
-
-@app.before_request
-def auto_seed_database():
-    global _seeded
-    if _seeded:
-        return
-    _seeded = True
-    try:
-        cur = mysql.connection.cursor()
-        
-        # 1. Seed Airports if empty
-        cur.execute("SELECT COUNT(*) FROM Airports")
-        if cur.fetchone()[0] == 0:
-            for code, name, city, country in [
-                ('BLR','Kempegowda','Bengaluru','India'),
-                ('MAA','Chennai Int','Chennai','India'),
-                ('DEL','Indira Gandhi','New Delhi','India'),
-                ('BOM','Chhatrapati','Mumbai','India'),
-                ('HYD','Rajiv Gandhi','Hyderabad','India'),
-                ('CCU','Netaji Subhas','Kolkata','India'),
-                ('GOI','Dabolim','Goa','India'),
-                ('JAI','Jaipur Int','Jaipur','India'),
-                ('JFK','John F. Kennedy International','New York','USA'),
-                ('HND','Haneda','Tokyo','Japan')
-            ]:
-                cur.execute("INSERT IGNORE INTO Airports (airport_code,airport_name,city,country) VALUES (%s,%s,%s,%s)", (code,name,city,country))
-            mysql.connection.commit()
-            print("AUTO-SEED: Airports seeded successfully.")
-        
-        # 2. Ensure status column exists in Flights
-        try:
-            cur.execute("ALTER TABLE Flights ADD COLUMN status ENUM('Scheduled', 'Completed', 'Cancelled') DEFAULT 'Scheduled'")
-            mysql.connection.commit()
-        except:
-            mysql.connection.rollback()
-        
-        # 3. Seed Flights if empty
-        cur.execute("SELECT COUNT(*) FROM Flights")
-        if cur.fetchone()[0] == 0:
-            airports = ['BLR', 'MAA', 'DEL', 'BOM', 'HYD', 'CCU', 'GOI', 'JAI', 'JFK', 'HND']
-            airlines = ['SkyNova Airlines', 'AeroBharat', 'Global Wings', 'CloudNine Airways', 'Vishwa Jet']
-            start_date = datetime.now()
-            count = 0
-            
-            for i in range(60):
-                current_date = start_date + timedelta(days=i)
-                for dep in airports:
-                    for arr in airports:
-                        if dep != arr:
-                            airline = random.choice(airlines)
-                            hour = random.randint(6, 22)
-                            minute = random.choice([0, 15, 30, 45])
-                            dep_time = current_date.replace(hour=hour, minute=minute, second=0)
-                            price = random.randint(3000, 15000)
-                            if 'JFK' in [dep, arr] or 'HND' in [dep, arr]:
-                                price += 40000
-                            cur.execute("INSERT INTO Flights (airline_name, departure_airport, arrival_airport, departure_time, base_price, available_seats, status) VALUES (%s, %s, %s, %s, %s, 150, 'Scheduled')", (airline, dep, arr, dep_time, price))
-                            count += 1
-            
-            mysql.connection.commit()
-            print(f"AUTO-SEED: {count} flights seeded successfully for the next 60 days.")
-        else:
-            print("AUTO-SEED: Flights table already has data, skipping seed.")
-        
-        cur.close()
-    except Exception as e:
-        print(f"AUTO-SEED ERROR: {e}")
 
 # ================= HELPER =================
 def get_current_user():
@@ -721,77 +648,6 @@ def api_admin_flights():
     rows = cur.fetchall(); cur.close()
     return jsonify([{"id":r[0],"airline":r[1],"dep":r[2],"arr":r[3],
         "time":r[4].strftime("%Y-%m-%d %H:%M") if r[4] else "N/A","price":float(r[5]),"seats":r[6],"status":r[7] if len(r)>7 and r[7] else "Scheduled"} for r in rows])
-
-@app.route('/api/admin/seed-flights')
-def api_admin_seed_flights():
-    cur = mysql.connection.cursor()
-    
-    # 1. Ensure Airports exist
-    try:
-        cur.execute("SELECT COUNT(*) FROM Airports")
-        if cur.fetchone()[0] == 0:
-            for code, name, city, country in [
-                ('BLR','Kempegowda','Bengaluru','India'),
-                ('MAA','Chennai Int','Chennai','India'),
-                ('DEL','Indira Gandhi','New Delhi','India'),
-                ('BOM','Chhatrapati','Mumbai','India'),
-                ('HYD','Rajiv Gandhi','Hyderabad','India'),
-                ('CCU','Netaji Subhas','Kolkata','India'),
-                ('GOI','Dabolim','Goa','India'),
-                ('JAI','Jaipur Int','Jaipur','India'),
-                ('JFK','John F. Kennedy International','New York','USA'),
-                ('HND','Haneda','Tokyo','Japan')
-            ]:
-                cur.execute("INSERT IGNORE INTO Airports (airport_code,airport_name,city,country) VALUES (%s,%s,%s,%s)", (code,name,city,country))
-            mysql.connection.commit()
-    except Exception as e:
-        print("Airport seed error:", e)
-        mysql.connection.rollback()
-        
-    # 2. Ensure status column exists in Flights
-    try:
-        cur.execute("ALTER TABLE Flights ADD COLUMN status ENUM('Scheduled', 'Completed', 'Cancelled') DEFAULT 'Scheduled'")
-        mysql.connection.commit()
-    except:
-        mysql.connection.rollback()
-        
-    # 3. Check if flights already exist
-    cur.execute("SELECT COUNT(*) FROM Flights")
-    if cur.fetchone()[0] > 0:
-        cur.close()
-        return jsonify({"success": False, "message": "Flights already exist. Clear data first if you want to re-seed."})
-
-    airports = ['BLR', 'MAA', 'DEL', 'BOM', 'HYD', 'CCU', 'GOI', 'JAI', 'JFK', 'HND']
-    airlines = ['SkyNova Airlines', 'AeroBharat', 'Global Wings', 'CloudNine Airways', 'Vishwa Jet']
-    
-    start_date = datetime.now()
-    count = 0
-    
-    # Generate flights for the next 60 days
-    try:
-        for i in range(60):
-            current_date = start_date + timedelta(days=i)
-            for dep in airports:
-                for arr in airports:
-                    if dep != arr:
-                        airline = random.choice(airlines)
-                        hour = random.randint(6, 22)
-                        minute = random.choice([0, 15, 30, 45])
-                        dep_time = current_date.replace(hour=hour, minute=minute, second=0)
-                        price = random.randint(3000, 15000)
-                        if 'JFK' in [dep, arr] or 'HND' in [dep, arr]:
-                            price += 40000
-                        cur.execute("INSERT INTO Flights (airline_name, departure_airport, arrival_airport, departure_time, base_price, available_seats, status) VALUES (%s, %s, %s, %s, %s, 150, 'Scheduled')", (airline, dep, arr, dep_time, price))
-                        count += 1
-                        
-        mysql.connection.commit()
-    except Exception as e:
-        mysql.connection.rollback()
-        cur.close()
-        return jsonify({"success": False, "message": "Error seeding flights", "error": str(e)})
-        
-    cur.close()
-    return jsonify({"success": True, "message": f"Successfully seeded {count} flights. Your database is now populated!"})
 
 @app.route('/api/admin/flights/<int:flight_id>/complete', methods=['POST'])
 def complete_flight(flight_id):
