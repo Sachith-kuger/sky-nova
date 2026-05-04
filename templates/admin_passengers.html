@@ -101,11 +101,23 @@
         });
 
         document.getElementById('searchInput').addEventListener('keyup', function(e) {
-            const term = e.target.value.toLowerCase();
+            const term = e.target.value.toLowerCase().trim();
             const rows = document.querySelectorAll('#passengersTableBody tr');
+            
             rows.forEach(row => {
                 const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(term) ? '' : 'none';
+                const cells = Array.from(row.querySelectorAll('td')).map(td => td.textContent.toLowerCase().trim());
+                
+                let isMatch = false;
+                if (!term) {
+                    isMatch = true;
+                } else if (term.startsWith('#')) {
+                    isMatch = cells.some(c => c === term);
+                } else {
+                    const words = term.split(/\s+/);
+                    isMatch = words.every(word => text.includes(word));
+                }
+                row.style.display = isMatch ? '' : 'none';
             });
         });
     </script>
