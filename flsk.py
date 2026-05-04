@@ -708,13 +708,14 @@ def api_admin_passengers():
 def api_admin_bookings():
     cur = mysql.connection.cursor()
     cur.execute("""SELECT b.booking_id,CONCAT(p.first_name,' ',p.last_name),f.airline_name,a1.city,a2.city,
-        b.seat_number,b.paid_amount,b.booking_date,b.status,b.travel_class FROM Bookings b
+        b.seat_number,b.paid_amount,b.booking_date,b.status,b.travel_class,b.flight_id FROM Bookings b
         JOIN Passengers p ON b.passenger_id=p.passenger_id JOIN Flights f ON b.flight_id=f.flight_id
         JOIN Airports a1 ON f.departure_airport=a1.airport_code JOIN Airports a2 ON f.arrival_airport=a2.airport_code
         ORDER BY b.booking_id DESC""")
     rows = cur.fetchall(); cur.close()
     return jsonify([{"id":r[0],"passenger":r[1],"airline":r[2],"dep":r[3],"arr":r[4],"seat":r[5],
-        "paid":float(r[6]) if r[6] else 0,"date":r[7].strftime("%Y-%m-%d %H:%M") if r[7] else "N/A","status":r[8],"class":str(r[9]).capitalize() if len(r)>9 and r[9] else "Economy"} for r in rows])
+        "paid":float(r[6]) if r[6] else 0,"date":r[7].strftime("%Y-%m-%d %H:%M") if r[7] else "N/A","status":r[8],
+        "class":str(r[9]).capitalize() if len(r)>9 and r[9] else "Economy", "flight_id": r[10]} for r in rows])
 
 @app.route('/api/admin/seed-flights')
 def seed_flights():
