@@ -716,6 +716,116 @@ def api_admin_bookings():
     return jsonify([{"id":r[0],"passenger":r[1],"airline":r[2],"dep":r[3],"arr":r[4],"seat":r[5],
         "paid":float(r[6]) if r[6] else 0,"date":r[7].strftime("%Y-%m-%d %H:%M") if r[7] else "N/A","status":r[8],"class":str(r[9]).capitalize() if len(r)>9 and r[9] else "Economy"} for r in rows])
 
+@app.route('/api/admin/seed-flights')
+def seed_flights():
+    """Seed flights from EVERY location to EVERY other location for May 4 – Jul 4, 2026."""
+    cur = mysql.connection.cursor()
+
+    # 1. Ensure all airports exist
+    airports = [
+        ('BLR','Kempegowda','Bengaluru','India'),
+        ('MAA','Chennai Int','Chennai','India'),
+        ('DEL','Indira Gandhi','New Delhi','India'),
+        ('BOM','Chhatrapati','Mumbai','India'),
+        ('HYD','Rajiv Gandhi','Hyderabad','India'),
+        ('CCU','Netaji Subhas','Kolkata','India'),
+        ('GOI','Dabolim','Goa','India'),
+        ('JAI','Jaipur Int','Jaipur','India'),
+        ('JFK','John F. Kennedy International','New York','USA'),
+        ('HND','Haneda','Tokyo','Japan'),
+    ]
+    for code, name, city, country in airports:
+        cur.execute("INSERT IGNORE INTO Airports (airport_code,airport_name,city,country) VALUES (%s,%s,%s,%s)",
+                    (code, name, city, country))
+    mysql.connection.commit()
+
+    # 2. Wipe old flights (cascading bookings should already be handled or table is fresh)
+    try:
+        cur.execute("DELETE FROM Bookings WHERE 1=1")
+    except:
+        pass
+    cur.execute("DELETE FROM Flights WHERE 1=1")
+    try:
+        cur.execute("ALTER TABLE Flights AUTO_INCREMENT = 1")
+    except:
+        pass
+    mysql.connection.commit()
+
+    # 3. Build every permutation of airport codes (src != dst)
+    codes = [a[0] for a in airports]
+
+    airlines = ['SkyNova Air', 'IndiGo', 'Air India', 'SpiceJet', 'Vistara', 'GoFirst', 'AirAsia India', 'Akasa Air']
+
+    # Domestic base prices (INR) by rough distance bucket
+    domestic_codes = {'BLR','MAA','DEL','BOM','HYD','CCU','GOI','JAI'}
+    intl_codes     = {'JFK','HND'}
+
+    # Price helper
+    def base_price(src, dst):
+        if src in intl_codes or dst in intl_codes:
+            return random.randint(25000, 55000)      # international
+        short_pairs = {('BLR','MAA'),('MAA','BLR'),('BLR','HYD'),('HYD','BLR'),('BOM','GOI'),('GOI','BOM'),('DEL','JAI'),('JAI','DEL')}
+        if (src, dst) in short_pairs:
+            return random.randint(2500, 5500)         # short domestic
+        return random.randint(4000, 12000)            # medium domestic
+
+    # Time slots for variety
+    time_slots = [
+        (5, 30), (6, 0), (7, 15), (8, 45), (9, 30),
+        (10, 0), (11, 30), (12, 15), (13, 45), (14, 0),
+        (15, 30), (16, 0), (17, 15), (18, 30), (19, 45),
+        (20, 0), (21, 30), (22, 0), (23, 15),
+    ]
+
+    start_date = datetime(2026, 5, 4)
+    end_date   = datetime(2026, 7, 4)
+    total_days = (end_date - start_date).days + 1   # inclusive
+
+    inserted = 0
+    batch = []
+
+    for src in codes:
+        for dst in codes:
+            if src == dst:
+                continue
+            # 2-3 flights per day per route
+            flights_per_day = random.choice([2, 2, 3])
+            chosen_slots = random.sample(time_slots, flights_per_day)
+
+            for day_offset in range(total_days):
+                fly_date = start_date + timedelta(days=day_offset)
+                for (hh, mm) in chosen_slots:
+                    dep_dt = fly_date.replace(hour=hh, minute=mm)
+                    airline = random.choice(airlines)
+                    price = base_price(src, dst)
+                    seats = random.choice([120, 150, 180, 200])
+                    batch.append((airline, src, dst, dep_dt, price, seats))
+                    inserted += 1
+
+                    # Insert in batches of 500 for performance
+                    if len(batch) >= 500:
+                        cur.executemany(
+                            "INSERT INTO Flights (airline_name, departure_airport, arrival_airport, departure_time, base_price, available_seats) VALUES (%s,%s,%s,%s,%s,%s)",
+                            batch
+                        )
+                        mysql.connection.commit()
+                        batch = []
+
+    # Flush remaining
+    if batch:
+        cur.executemany(
+            "INSERT INTO Flights (airline_name, departure_airport, arrival_airport, departure_time, base_price, available_seats) VALUES (%s,%s,%s,%s,%s,%s)",
+            batch
+        )
+        mysql.connection.commit()
+
+    cur.close()
+    routes = len(codes) * (len(codes) - 1)
+    return jsonify({
+        "success": True,
+        "message": f"Seeded {inserted} flights across {routes} routes ({len(codes)} cities) from {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}."
+    })
+
 @app.route('/api/debug')
 def debug_db():
     try:
